@@ -1,0 +1,54 @@
+- hosts: local
+  user: vagrant
+  sudo: true
+  vars:
+    hostname: localhost:8080
+  tasks:
+    - name: update apt repo
+      action: apt update-cache=yes cache_valid_time=3600
+
+    - name: install nginx
+      action: apt name=nginx state=installed
+
+    - name: install php
+      action: apt name=php5-fpm state=installed
+
+    - name: install mysql client
+      action: apt name=php5-mysql state=installed
+      notify: restart php
+
+    - name: install gd
+      action: apt name=php5-gd state=installed
+
+    - name: install curl
+      action: apt name=php5-curl state=installed
+
+    - name: install apc
+      action: apt name=php-apc state=installed
+      notify: restart php
+
+    - name: install mysql server
+      action: apt name=mysql-server state=installed
+
+    - name: install wordpress
+      action: apt name=wordpress state=installed
+
+    - name: activate wordpress installation
+      action: file src=/usr/share/wordpress dest=/usr/share/nginx/www/wordpress owner=www-data group=www-data state=link
+
+    - name: copy site config
+      action: template src=nginx-site.j2 dest=/etc/nginx/sites-available/wordpress owner=www-data group=www-data
+
+    - name: link site config
+      action: file src=/etc/nginx/sites-available/wordpress dest=/etc/nginx/sites-enabled/wordpress owner=www-data group=www-data state=link
+      notify: restart nginx
+
+    - name: create wordpress database and config file
+      action: shell bash /usr/share/doc/wordpress/examples/setup-mysql -n wordpress {{ hostname }} || /bin/true
+
+  handlers:
+    - name: restart nginx
+      action: service name=nginx state=restarted
+
+    - name: restart php
+      action: service name=php5-fpm state=restarted
