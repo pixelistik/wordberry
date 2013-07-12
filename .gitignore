@@ -1,0 +1,6 @@
+*~
+*.marks
+*.swp
+*#*#
+.DS_Store
+/.vagrant
