@@ -2,7 +2,9 @@
   user: vagrant
   sudo: true
   vars:
-    hostname: localhost:8080
+    blog_title: A Wordberry Blog
+    admin_email: test@pixelistik.de
+    admin_password: test
   tasks:
     - name: update apt repo
       action: apt update-cache=yes cache_valid_time=3600
@@ -20,7 +22,7 @@
     - name: install gd
       action: apt name=php5-gd state=installed
 
-    - name: install curl
+    - name: install php5-curl
       action: apt name=php5-curl state=installed
 
     - name: install apc
@@ -30,21 +32,47 @@
     - name: install mysql server
       action: apt name=mysql-server state=installed
 
+    - name: install php5-cli
+      action: apt name=php5-cli state=installed
+
+    - name: install curl
+      action: apt name=curl state=installed
+
+    - name: install git
+      action: apt name=git state=installed
+
+    - name: download wp-cli installer
+      get_url: url=https://raw.github.com/wp-cli/wp-cli.github.com/master/installer.sh dest=/tmp/wp-cli-installer.sh mode=0755
+
+    - name: install wp-cli
+      sudo: false
+      command: /tmp/wp-cli-installer.sh creates=/home/vagrant/.wp-cli
+
+    - name: create wordpress directory
+      file: path=/var/www/wordpress state=directory
+
     - name: install wordpress
-      action: apt name=wordpress state=installed
+      command: /home/vagrant/.wp-cli/bin/wp core download chdir=/var/www/wordpress creates=/var/www/wordpress/wp-content
 
-    - name: activate wordpress installation
-      action: file src=/usr/share/wordpress dest=/usr/share/nginx/www/wordpress owner=www-data group=www-data state=link
-
-    - name: copy site config
+    - name: create nginx site
       action: template src=nginx-site.j2 dest=/etc/nginx/sites-available/wordpress owner=www-data group=www-data
+      notify: restart nginx
 
-    - name: link site config
+    - name: activate nginx site
       action: file src=/etc/nginx/sites-available/wordpress dest=/etc/nginx/sites-enabled/wordpress owner=www-data group=www-data state=link
       notify: restart nginx
 
-    - name: create wordpress database and config file
-      action: shell bash /usr/share/doc/wordpress/examples/setup-mysql -n wordpress {{ hostname }} || /bin/true
+    - name: install mysql support for python
+      action: apt name=python-mysqldb state=installed
+
+    - name: create wordpress database
+      mysql_db: name=wordpress
+
+    - name: create wordpress configuration
+      shell: echo 'define("WP_SITEURL", "http://" . $_SERVER["HTTP_HOST"]);define("WP_HOME", "http://" . $_SERVER["HTTP_HOST"]);'|/home/vagrant/.wp-cli/bin/wp core config --dbname=wordpress --dbuser=root chdir=/var/www/wordpress --extra-php creates=/var/www/wordpress/wp-config.php
+
+    - name: set up wordpress admin and blog
+      command: /home/vagrant/.wp-cli/bin/wp core install --title={{ blog_title }} --admin_email={{ admin_email }} --admin_password={{ admin_password }} chdir=/var/www/wordpress
 
   handlers:
     - name: restart nginx
