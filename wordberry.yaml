@@ -54,6 +54,12 @@
     - name: install wordpress
       command: /home/vagrant/.wp-cli/bin/wp core download chdir=/var/www/wordpress creates=/var/www/wordpress/wp-content
 
+    - name: set root as owner of wordpress directory
+      file: path=/var/www/wordpress state=directory owner=root group=root recurse=yes
+
+    - name: create upload directory with owner www-data
+      file: path=/var/www/wordpress/wp-content/uploads state=directory owner=www-data group=www-data
+
     - name: create nginx site
       action: template src=nginx-site.j2 dest=/etc/nginx/sites-available/wordpress owner=www-data group=www-data
       notify: restart nginx
