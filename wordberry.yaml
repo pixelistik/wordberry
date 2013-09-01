@@ -45,11 +45,10 @@
       get_url: url=https://raw.github.com/wp-cli/wp-cli.github.com/master/installer.sh dest=/tmp/wp-cli-installer.sh mode=0755
 
     - name: install wp-cli
-      sudo: false
-      command: /tmp/wp-cli-installer.sh creates=/home/vagrant/.wp-cli
+      shell: INSTALL_DIR='/usr/share/wp-cli' /tmp/wp-cli-installer.sh creates=/usr/share/wp-cli
 
     - name: symlink wp-cli to /usr/bin
-      action: file src=/home/vagrant/.wp-cli/bin/wp dest=/usr/bin/wp state=link
+      action: file src=/usr/share/wp-cli/bin/wp dest=/usr/bin/wp state=link
 
     - name: create wordpress directory
       file: path=/var/www/wordpress state=directory
