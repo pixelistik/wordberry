@@ -48,11 +48,14 @@
       sudo: false
       command: /tmp/wp-cli-installer.sh creates=/home/vagrant/.wp-cli
 
+    - name: symlink wp-cli to /usr/bin
+      action: file src=/home/vagrant/.wp-cli/bin/wp dest=/usr/bin/wp state=link
+
     - name: create wordpress directory
       file: path=/var/www/wordpress state=directory
 
     - name: install wordpress
-      command: /home/vagrant/.wp-cli/bin/wp core download chdir=/var/www/wordpress creates=/var/www/wordpress/wp-content
+      command: wp core download chdir=/var/www/wordpress creates=/var/www/wordpress/wp-content
 
     - name: set root as owner of wordpress directory
       file: path=/var/www/wordpress state=directory owner=root group=root recurse=yes
@@ -79,10 +82,10 @@
       mysql_db: name=wordpress
 
     - name: create wordpress configuration
-      shell: echo 'define("WP_SITEURL", "http://" . $_SERVER["HTTP_HOST"]);define("WP_HOME", "http://" . $_SERVER["HTTP_HOST"]);'|/home/vagrant/.wp-cli/bin/wp core config --dbname=wordpress --dbuser=root chdir=/var/www/wordpress --extra-php creates=/var/www/wordpress/wp-config.php
+      shell: echo 'define("WP_SITEURL", "http://" . $_SERVER["HTTP_HOST"]);define("WP_HOME", "http://" . $_SERVER["HTTP_HOST"]);'|wp core config --dbname=wordpress --dbuser=root chdir=/var/www/wordpress --extra-php creates=/var/www/wordpress/wp-config.php
 
     - name: set up wordpress admin and blog
-      command: /home/vagrant/.wp-cli/bin/wp core install --title={{ blog_title }} --admin_email={{ admin_email }} --admin_password={{ admin_password }} chdir=/var/www/wordpress
+      command: wp core install --title={{ blog_title }} --admin_email={{ admin_email }} --admin_password={{ admin_password }} chdir=/var/www/wordpress
 
     - name: install varnish
       action: apt name=varnish state=installed
