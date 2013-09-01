@@ -87,6 +87,9 @@
     - name: set up wordpress admin and blog
       command: wp core install --title={{ blog_title }} --admin_email={{ admin_email }} --admin_password={{ admin_password }} chdir=/var/www/wordpress
 
+    - name: set up wordpress URL structure
+      command: wp rewrite structure '/%year%/%postname%' chdir=/var/www/wordpress
+
     - name: install varnish
       action: apt name=varnish state=installed
 
