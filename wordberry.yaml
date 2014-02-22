@@ -6,6 +6,9 @@
     admin_email: test@pixelistik.de
     admin_password: test
   tasks:
+    - name: manually install python-apt
+      shell: apt-get update && apt-get install python-apt --yes creates=/usr/share/pyshared/apt
+
     - name: update apt repo
       action: apt update-cache=yes cache_valid_time=3600
 
@@ -41,6 +44,9 @@
     - name: install git
       action: apt name=git state=installed
 
+    - name: create wordpress user
+      user: name=wordpress createhome=no shell=/bin/false
+
     - name: download wp-cli installer
       get_url: url=https://raw.github.com/wp-cli/wp-cli.github.com/master/installer.sh dest=/tmp/wp-cli-installer.sh mode=0755
 
@@ -51,16 +57,11 @@
       action: file src=/usr/share/wp-cli/bin/wp dest=/usr/bin/wp state=link
 
     - name: create wordpress directory
-      file: path=/var/www/wordpress state=directory
+      file: path=/var/www/wordpress state=directory owner=wordpress
 
     - name: install wordpress
       command: wp core download chdir=/var/www/wordpress creates=/var/www/wordpress/wp-content
-
-    - name: set root as owner of wordpress directory
-      file: path=/var/www/wordpress state=directory owner=root group=root recurse=yes
-
-    - name: create upload directory with owner www-data
-      file: path=/var/www/wordpress/wp-content/uploads state=directory owner=www-data group=www-data
+      sudo_user: wordpress
 
     - name: create nginx site
       action: template src=nginx-site.j2 dest=/etc/nginx/sites-available/wordpress owner=www-data group=www-data
@@ -82,12 +83,23 @@
 
     - name: create wordpress configuration
       shell: echo 'define("WP_SITEURL", "http://" . $_SERVER["HTTP_HOST"]);define("WP_HOME", "http://" . $_SERVER["HTTP_HOST"]);'|wp core config --dbname=wordpress --dbuser=root chdir=/var/www/wordpress --extra-php creates=/var/www/wordpress/wp-config.php
+      sudo_user: wordpress
 
     - name: set up wordpress admin and blog
-      command: wp core install --title={{ blog_title }} --admin_email={{ admin_email }} --admin_password={{ admin_password }} chdir=/var/www/wordpress
+      command: wp core install --title="{{ blog_title }}" --url="wtf" --admin_email="{{ admin_email }}" --admin_user="admin" --admin_password="{{ admin_password }}" chdir=/var/www/wordpress
+      sudo_user: wordpress
+
+    - name: install super cache plugin
+      command: wp plugin install wp-super-cache chdir=/var/www/wordpress
+      sudo_user: wordpress
+
+    - name: activate super cache plugin
+      command: wp plugin install wp-super-cache chdir=/var/www/wordpress
+      sudo_user: wordpress
 
     - name: set up wordpress URL structure
-      command: wp rewrite structure '/%year%/%postname%' chdir=/var/www/wordpress
+      command: wp rewrite structure "/%year%/%postname%" chdir=/var/www/wordpress
+      sudo_user: wordpress
 
     - name: install varnish
       action: apt name=varnish state=installed
