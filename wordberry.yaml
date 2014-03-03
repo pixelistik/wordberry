@@ -56,6 +56,15 @@
     - name: symlink wp-cli to /usr/bin
       action: file src=/usr/share/wp-cli/bin/wp dest=/usr/bin/wp state=link
 
+    - name: create wp-cli command directory
+      file: path=/usr/share/wp-cli/commands state=directory
+
+    - name: install wp-cli super-cache command
+      command: git clone https://github.com/wp-cli/wp-super-cache-cli.git chdir=/usr/share/wp-cli/commands creates=/usr/share/wp-cli/commands/wp-super-cache
+
+    - name: add wp-cli super cache to configuration
+      command: echo "require:\n  - commands/wp-super-cache-cli/cli.php" > /usr/share/wp-cli/config.yml
+
     - name: create wordpress directory
       file: path=/var/www/wordpress state=directory owner=wordpress
 
