@@ -50,27 +50,8 @@
     - name: create wordpress user
       user: name=wordpress shell=/bin/false
 
-    - name: download wp-cli installer
-      get_url: url=https://raw.github.com/wp-cli/wp-cli.github.com/master/installer.sh dest=/tmp/wp-cli-installer.sh mode=0755
-
-    - name: install wp-cli
-      shell: /tmp/wp-cli-installer.sh creates=/home/wordpress/.wp-cli
-      sudo_user: wordpress
-
-    - name: symlink wp-cli to /usr/bin
-      action: file src=/home/wordpress/.wp-cli/bin/wp dest=/usr/bin/wp state=link
-
-    - name: create wp-cli command directory
-      file: path=/home/wordpress/.wp-cli/commands state=directory
-      sudo_user: wordpress
-
-    - name: install wp-cli super-cache command
-      git: repo=https://github.com/wp-cli/wp-super-cache-cli.git dest=/home/wordpress/.wp-cli/commands/wp-super-cache-cli
-      sudo_user: wordpress
-
-    - name: add wp-cli super cache to configuration
-      shell: echo "require:\n  - commands/wp-super-cache-cli/cli.php" > /home/wordpress/.wp-cli/config.yml
-      sudo_user: wordpress
+    - name: download wp-cli
+      get_url: url=https://raw.github.com/wp-cli/builds/gh-pages/phar/wp-cli.phar dest=/usr/bin/wp mode=0755
 
     - name: create wordpress directory
       file: path=/var/www/wordpress state=directory owner=wordpress
@@ -111,10 +92,6 @@
 
     - name: activate super cache plugin
       command: wp plugin activate wp-super-cache chdir=/var/www/wordpress
-      sudo_user: wordpress
-
-    - name: enable wp-super-cache
-      command: wp super-cache enable chdir=/var/www/wordpress
       sudo_user: wordpress
 
     - name: set up wordpress URL structure
