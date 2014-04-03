@@ -9,6 +9,12 @@
     - name: manually install python-apt
       shell: apt-get update && apt-get install python-apt --yes creates=/usr/share/pyshared/apt
 
+    - name: add better mirror support for apt
+      lineinfile:
+        dest=/etc/apt/sources.list
+        line="deb mirror://mirrors.ubuntu.com/mirrors.txt precise main restricted universe multiverse"
+        insertbefore=BOF
+
     - name: update apt repo
       action: apt update-cache=yes cache_valid_time=3600
 
