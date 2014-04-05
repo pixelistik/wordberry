@@ -104,23 +104,9 @@
       command: wp rewrite structure "/%year%/%postname%" chdir=/var/www/wordpress
       sudo_user: wordpress
 
-    - name: install varnish
-      action: apt name=varnish state=installed
-
-    - name: varnish options
-      action: template src=varnish-options.j2 dest=/etc/default/varnish
-      notify: restart varnish
-
-    - name: varnish config
-      action: template src=varnish-config.vcl.j2 dest=/etc/varnish/wordpress.vcl
-      notify: restart varnish
-
   handlers:
     - name: restart nginx
       action: service name=nginx state=restarted
 
     - name: restart php
       action: service name=php5-fpm state=restarted
-
-    - name: restart varnish
-      action: service name=varnish state=restarted

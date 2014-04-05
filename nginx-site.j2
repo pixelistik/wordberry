@@ -2,7 +2,7 @@ server {
 	root /var/www/wordpress;
 	index index.php;
 
-	listen  127.0.0.1:8888;
+	listen  0.0.0.0:80;
 
 	# Rewrite URLs: unless the request is for a valid file, send to index.php
 	if (!-e $request_filename)
